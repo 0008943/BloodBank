@@ -1,0 +1,343 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@android:color/white"
+    tools:context=".Activities.BloodInstructionsActivity">
+
+    <androidx.appcompat.widget.Toolbar
+        android:id="@+id/toolbar"
+        android:layout_width="match_parent"
+        android:layout_height="?attr/actionBarSize"
+        android:background="@android:color/white"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <ImageView
+            android:id="@+id/btnBack"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:padding="12dp"
+            android:src="@drawable/icons8_back_arrow_24"
+            app:tint="@android:color/black" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:text="Blood instructions"
+            android:textColor="@android:color/black"
+            android:textSize="20sp"
+            android:textStyle="bold" />
+
+        <ImageView
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:layout_gravity="end"
+            android:padding="12dp"
+            android:src="@drawable/icons8_notification_24"
+            app:tint="@color/colorPrimary" />
+
+    </androidx.appcompat.widget.Toolbar>
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        app:layout_constraintBottom_toTopOf="@id/bottom_navigation_container"
+        app:layout_constraintTop_toBottomOf="@id/toolbar">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="20dp">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Additional tips before donating:"
+                android:textColor="@color/colorPrimary"
+                android:textSize="18sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:lineSpacingExtra="4dp"
+                android:text="• Don't take aspirin for 2 days before your appointment.\n\n• Ask a friend to donate at the same time. You can support each other and do twice as much good!\n\n• Download the Blood Bank App to receive appointment reminders, start your RapidPass and more"
+                android:textColor="#424242"
+                android:textSize="14sp" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="24dp"
+                android:text="Additional tips the day of your donation:"
+                android:textColor="@color/colorPrimary"
+                android:textSize="18sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:lineSpacingExtra="4dp"
+                android:text="• Drink an extra 16 oz. of water (or other nonalcoholic drink) before your appointment.\n\n• Eat a healthy meal, avoiding fatty foods like hamburgers, fries or ice cream.\n\n• Let us know if you have a preferred arm or particular vein that has been used successfully in the past to draw blood."
+                android:textColor="#424242"
+                android:textSize="14sp" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="24dp"
+                android:text="Additional tips after donating:"
+                android:textColor="@color/colorPrimary"
+                android:textSize="18sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:lineSpacingExtra="4dp"
+                android:text="• Keep the strip bandage on for the next several hours, to avoid a skin rash, clean the area around the bandage\n\n• Don't do any heavy lifting or vigorous exercise for the rest of the day.\n\n• Keep eating iron-rich foods"
+                android:textColor="#424242"
+                android:textSize="14sp" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="24dp"
+                android:text="Blood type matching:"
+                android:textColor="@color/colorPrimary"
+                android:textSize="18sp"
+                android:textStyle="bold" />
+
+            <com.google.android.material.card.MaterialCardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:layout_marginBottom="40dp"
+                app:cardBackgroundColor="@android:color/white"
+                app:cardCornerRadius="16dp"
+                app:cardElevation="4dp"
+                app:cardPreventCornerOverlap="false">
+
+                <TableLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:stretchColumns="0,1,2">
+
+                    <TableRow
+                        android:background="@color/colorPrimary"
+                        android:padding="14dp">
+                        <TextView
+                            android:text="Blood Type"
+                            android:textColor="@android:color/white"
+                            android:textStyle="bold"
+                            android:gravity="center"
+                            android:textSize="14sp"/>
+                        <TextView
+                            android:text="Gives"
+                            android:textColor="@android:color/white"
+                            android:textStyle="bold"
+                            android:gravity="center"
+                            android:textSize="14sp"/>
+
+                        <TextView
+                            android:gravity="center"
+                            android:text="Receives"
+                            android:textColor="@android:color/white"
+                            android:textSize="14sp"
+                            android:textStyle="bold" />
+                    </TableRow>
+
+                    <TableRow android:padding="12dp" android:background="@android:color/white">
+                        <TextView android:text="A+" android:gravity="center" android:textColor="#212121" android:textStyle="bold"/>
+                        <TextView android:text="A+, AB+" android:gravity="center" android:textColor="#424242"/>
+                        <TextView android:text="A+, A-, O+, O-" android:gravity="center" android:textColor="#424242"/>
+                    </TableRow>
+
+                    <View android:layout_height="1dp" android:background="#EEEEEE"/>
+
+                    <TableRow android:padding="12dp" android:background="@android:color/white">
+                        <TextView android:text="O+" android:gravity="center" android:textColor="#212121" android:textStyle="bold"/>
+                        <TextView android:text="O+, A+, B+, AB+" android:gravity="center" android:textColor="#424242"/>
+                        <TextView android:text="O+, O-" android:gravity="center" android:textColor="#424242"/>
+                    </TableRow>
+
+                    <View android:layout_height="1dp" android:background="#EEEEEE"/>
+
+                    <TableRow android:padding="12dp" android:background="@android:color/white">
+                        <TextView android:text="B+" android:gravity="center" android:textColor="#212121" android:textStyle="bold"/>
+                        <TextView android:text="B+, AB+" android:gravity="center" android:textColor="#424242"/>
+                        <TextView android:text="B+, B-, O+, O-" android:gravity="center" android:textColor="#424242"/>
+                    </TableRow>
+
+                    <View android:layout_height="1dp" android:background="#EEEEEE"/>
+
+                    <TableRow android:padding="12dp" android:background="@android:color/white">
+                        <TextView android:text="AB+" android:gravity="center" android:textColor="#212121" android:textStyle="bold"/>
+                        <TextView android:text="AB+" android:gravity="center" android:textColor="#424242"/>
+                        <TextView android:text="Everyone" android:gravity="center" android:textColor="#424242"/>
+                    </TableRow>
+
+                    <View android:layout_height="1dp" android:background="#EEEEEE"/>
+
+                    <TableRow android:padding="12dp" android:background="@android:color/white">
+                        <TextView android:text="A-" android:gravity="center" android:textColor="#212121" android:textStyle="bold"/>
+                        <TextView android:text="A+, A-, AB+, AB-" android:gravity="center" android:textColor="#424242"/>
+                        <TextView android:text="A-, O-" android:gravity="center" android:textColor="#424242"/>
+                    </TableRow>
+
+                    <View android:layout_height="1dp" android:background="#EEEEEE"/>
+
+                    <TableRow android:padding="12dp" android:background="@android:color/white">
+                        <TextView android:text="O-" android:gravity="center" android:textColor="#212121" android:textStyle="bold"/>
+                        <TextView android:text="Everyone" android:gravity="center" android:textColor="#424242"/>
+                        <TextView android:text="O-" android:gravity="center" android:textColor="#424242"/>
+                    </TableRow>
+
+                    <View android:layout_height="1dp" android:background="#EEEEEE"/>
+
+                    <TableRow android:padding="12dp" android:background="@android:color/white">
+                        <TextView android:text="B-" android:gravity="center" android:textColor="#212121" android:textStyle="bold"/>
+                        <TextView android:text="B+, B-, AB+, AB-" android:gravity="center" android:textColor="#424242"/>
+                        <TextView android:text="B-, O-" android:gravity="center" android:textColor="#424242"/>
+                    </TableRow>
+
+                    <View android:layout_height="1dp" android:background="#EEEEEE"/>
+
+                    <TableRow android:padding="12dp" android:background="@android:color/white">
+                        <TextView android:text="AB-" android:gravity="center" android:textColor="#212121" android:textStyle="bold"/>
+                        <TextView android:text="AB+, AB-" android:gravity="center" android:textColor="#424242"/>
+                        <TextView android:text="AB-, A-, B-, O-" android:gravity="center" android:textColor="#424242"/>
+                    </TableRow>
+
+                </TableLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+        </LinearLayout>
+    </ScrollView>
+
+    <com.google.android.material.card.MaterialCardView
+        android:id="@+id/bottom_navigation_container"
+        android:layout_width="match_parent"
+        android:layout_height="80dp"
+        app:cardBackgroundColor="@android:color/white"
+        app:cardElevation="16dp"
+        app:layout_constraintBottom_toBottomOf="parent">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:gravity="center"
+            android:orientation="horizontal">
+
+            <LinearLayout
+                android:id="@+id/home_button"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:gravity="center"
+                android:orientation="vertical">
+
+                <ImageView
+                    android:layout_width="24dp"
+                    android:layout_height="24dp"
+                    android:src="@drawable/icons8_home_48"
+                    app:tint="@color/colorPrimary" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Home"
+                    android:textColor="@color/colorPrimary"
+                    android:textSize="10sp" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/donors_button"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:gravity="center"
+                android:orientation="vertical">
+
+                <ImageView
+                    android:layout_width="24dp"
+                    android:layout_height="24dp"
+                    android:src="@drawable/icons8_oil_massage_50"
+                    app:tint="@color/colorPrimary" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Donors"
+                    android:textColor="@color/colorPrimary"
+                    android:textSize="10sp" />
+            </LinearLayout>
+
+            <com.google.android.material.floatingactionbutton.FloatingActionButton
+                android:id="@+id/make_request_fab"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginHorizontal="8dp"
+                android:contentDescription="Make a blood request"
+                android:src="@android:drawable/ic_input_add"
+                app:backgroundTint="@color/colorPrimary"
+                app:fabSize="normal"
+                app:tint="@android:color/white" />
+
+            <LinearLayout
+                android:id="@+id/need_button"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:gravity="center"
+                android:orientation="vertical">
+
+                <ImageView
+                    android:layout_width="24dp"
+                    android:layout_height="24dp"
+                    android:src="@drawable/icons8_blood_50"
+                    app:tint="@color/colorPrimary" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Need"
+                    android:textColor="@color/colorPrimary"
+                    android:textSize="10sp" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/menu_bottom_nav"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:clickable="true"
+                android:focusable="true"
+                android:gravity="center"
+                android:orientation="vertical">
+
+                <ImageView
+                    android:layout_width="24dp"
+                    android:layout_height="24dp"
+                    android:src="@drawable/user"
+                    app:tint="@color/colorPrimary" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Profile"
+                    android:textColor="@color/colorPrimary"
+                    android:textSize="10sp" />
+            </LinearLayout>
+
+        </LinearLayout>
+    </com.google.android.material.card.MaterialCardView>
+
+</androidx.constraintlayout.widget.ConstraintLayout>
