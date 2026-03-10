@@ -33,6 +33,7 @@ public class DonorResultsActivity extends AppCompatActivity {
     private DonorAdapter adapter;
     private List<User> donorList;
     private String targetBloodGroup;
+    private String targetCity;
     private String targetLocation;
 
     @Override
@@ -41,18 +42,20 @@ public class DonorResultsActivity extends AppCompatActivity {
         setContentView(R.layout.activity_donor_results);
 
         targetBloodGroup = getIntent().getStringExtra("bloodGroup");
+        targetCity = getIntent().getStringExtra("city");
         targetLocation = getIntent().getStringExtra("location");
 
         rvDonors = findViewById(R.id.rvDonors);
         tvNoDonors = findViewById(R.id.tvNoDonors);
         findViewById(R.id.btnBack).setOnClickListener(v -> finish());
 
-        rvDonors.setLayoutManager(new LinearLayoutManager(this));
-        donorList = new ArrayList<>();
-        adapter = new DonorAdapter(donorList);
-        rvDonors.setAdapter(adapter);
-
-        searchDonors();
+        if (rvDonors != null) {
+            rvDonors.setLayoutManager(new LinearLayoutManager(this));
+            donorList = new ArrayList<>();
+            adapter = new DonorAdapter(donorList);
+            rvDonors.setAdapter(adapter);
+            searchDonors();
+        }
     }
 
     private void searchDonors() {
@@ -60,32 +63,53 @@ public class DonorResultsActivity extends AppCompatActivity {
         usersRef.addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
+                if (!snapshot.exists()) {
+                    showNoDonors();
+                    return;
+                }
+                
                 donorList.clear();
                 for (DataSnapshot userSnapshot : snapshot.getChildren()) {
                     User user = userSnapshot.getValue(User.class);
                     if (user != null) {
-                        boolean matchBlood = targetBloodGroup == null || user.getBloodGroup().equalsIgnoreCase(targetBloodGroup);
-                        boolean matchLocation = targetLocation == null || targetLocation.isEmpty() || user.getCity().equalsIgnoreCase(targetLocation);
+                        boolean matchBlood = targetBloodGroup == null || targetBloodGroup.isEmpty() || 
+                                           (user.getBloodGroup() != null && user.getBloodGroup().equalsIgnoreCase(targetBloodGroup));
+                        
+                        boolean matchCity = targetCity == null || targetCity.isEmpty() || 
+                                          (user.getCity() != null && user.getCity().equalsIgnoreCase(targetCity));
+                        
+                        boolean matchLocation = targetLocation == null || targetLocation.isEmpty() || 
+                                              (user.getCity() != null && user.getCity().equalsIgnoreCase(targetLocation));
 
-                        if (matchBlood && matchLocation) {
+                        if (matchBlood && (matchCity || matchLocation)) {
                             donorList.add(user);
                         }
                     }
                 }
 
                 if (donorList.isEmpty()) {
-                    tvNoDonors.setVisibility(View.VISIBLE);
-                    rvDonors.setVisibility(View.GONE);
+                    showNoDonors();
                 } else {
-                    tvNoDonors.setVisibility(View.GONE);
-                    rvDonors.setVisibility(View.VISIBLE);
-                    adapter.notifyDataSetChanged();
+                    showDonors();
                 }
             }
 
             @Override
-            public void onCancelled(@NonNull DatabaseError error) {}
+            public void onCancelled(@NonNull DatabaseError error) {
+                showNoDonors();
+            }
         });
+    }
+
+    private void showNoDonors() {
+        if (tvNoDonors != null) tvNoDonors.setVisibility(View.VISIBLE);
+        if (rvDonors != null) rvDonors.setVisibility(View.GONE);
+    }
+
+    private void showDonors() {
+        if (tvNoDonors != null) tvNoDonors.setVisibility(View.GONE);
+        if (rvDonors != null) rvDonors.setVisibility(View.VISIBLE);
+        if (adapter != null) adapter.notifyDataSetChanged();
     }
 
     private class DonorAdapter extends RecyclerView.Adapter<DonorAdapter.ViewHolder> {
@@ -103,9 +127,9 @@ public class DonorResultsActivity extends AppCompatActivity {
         @Override
         public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
             User donor = donors.get(position);
-            holder.name.setText(donor.getName());
-            holder.location.setText(donor.getCity());
-            holder.bloodGroup.setText(donor.getBloodGroup());
+            holder.name.setText(donor.getName() != null ? donor.getName() : "Unknown");
+            holder.location.setText(donor.getCity() != null ? donor.getCity() : "Unknown Location");
+            holder.bloodGroup.setText(donor.getBloodGroup() != null ? donor.getBloodGroup() : "N/A");
 
             String imageStr = donor.getProfileImageUrl();
             if (imageStr != null && !imageStr.isEmpty()) {

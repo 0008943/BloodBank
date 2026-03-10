@@ -45,4 +45,37 @@
     <string name="profile_image_description">Profile Image</string>
     <string name="lives_saved_description">Lives Saved</string>
     <string name="blood_group_description">Blood Group</string>
+
+    <string name="sign_up">Sign Up</string>
+    <string name="create_account">Create your account</string>
+    <string name="register_subtitle">Register now to create a new account</string>
+    <string name="full_name">Full Name</string>
+    <string name="city">City</string>
+    <string name="mobile_number">Mobile Number</string>
+    <string name="password">Password</string>
+    <string name="login_title">Login</string>
+    <string name="welcome_back">Welcome Back</string>
+    <string name="login_subtitle">Login to your account to continue</string>
+    <string name="no_account">Don\'t have an account?</string>
+    <string name="register_now">Register Now</string>
+
+    <!-- Main Activity Strings -->
+    <string name="hello_default">Hello Selena!</string>
+    <string name="user_id_default">User ID: 0130101</string>
+    <string name="banner_title_default">You can become a Blood Donor in</string>
+    <string name="banner_days_default">2 Days</string>
+    <string name="become_donor">Become a Donor</string>
+    <string name="save_give">Save\nGive</string>
+    <string name="find_donors_label">Find Donors</string>
+    <string name="request_blood_label">Request For Blood</string>
+    <string name="blood_instructions_label">Blood Instructions</string>
+    <string name="live_request_status">Live Blood Request Status</string>
+    <string name="live_indicator">LIVE</string>
+    <string name="recent_requests">Recent Requests</string>
+    <string name="see_all">See all</string>
+    <string name="home">Home</string>
+    <string name="donors">Donors</string>
+    <string name="need">Need</string>
+    <string name="profile">Profile</string>
+    <string name="notification_description">Notifications</string>
 </resources>
