@@ -85,4 +85,10 @@
     <string name="message">Message</string>
     <string name="group_label">Group</string>
     <string name="location_description">Location</string>
+
+    <!-- Request UI Labels -->
+    <string name="track_donor_label">Track Donor</string>
+    <string name="accepted_you_label">Accepted (You)</string>
+    <string name="accepted_label">Accepted</string>
+    <string name="accept_label">Accept</string>
 </resources>

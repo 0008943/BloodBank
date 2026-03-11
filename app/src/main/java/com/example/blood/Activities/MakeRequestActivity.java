@@ -11,6 +11,7 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.activity.OnBackPressedCallback;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
@@ -33,7 +34,6 @@ import java.util.Locale;
 
 public class MakeRequestActivity extends AppCompatActivity {
 
-    private RecyclerView rvRequests;
     private RequestAdapter adapter;
     private List<DonationRequest> requestList;
     private DatabaseReference databaseReference;
@@ -51,7 +51,7 @@ public class MakeRequestActivity extends AppCompatActivity {
         ImageView btnNotification = findViewById(R.id.btnNotification);
         FloatingActionButton fabAddRequest = findViewById(R.id.make_request_fab);
 
-        rvRequests = findViewById(R.id.rvRequests);
+        RecyclerView rvRequests = findViewById(R.id.rvRequests);
         rvRequests.setLayoutManager(new LinearLayoutManager(this));
         requestList = new ArrayList<>();
         adapter = new RequestAdapter(requestList);
@@ -76,12 +76,19 @@ public class MakeRequestActivity extends AppCompatActivity {
         }
 
         if (fabAddRequest != null) {
-            fabAddRequest.setOnClickListener(v -> {
-                Toast.makeText(this, "Add New Request Clicked", Toast.LENGTH_SHORT).show();
-            });
+            fabAddRequest.setOnClickListener(v -> Toast.makeText(this, "Add New Request Clicked", Toast.LENGTH_SHORT).show());
         }
 
         setupNavigation();
+
+        // Migrate from deprecated onBackPressed() to OnBackPressedDispatcher
+        getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
+            @Override
+            public void handleOnBackPressed() {
+                finish();
+                overridePendingTransition(R.anim.slide_in_left, R.anim.slide_out_right);
+            }
+        });
     }
 
     private void fetchRequests() {
@@ -123,14 +130,8 @@ public class MakeRequestActivity extends AppCompatActivity {
         });
     }
 
-    @Override
-    public void onBackPressed() {
-        super.onBackPressed();
-        overridePendingTransition(R.anim.slide_in_left, R.anim.slide_out_right);
-    }
-
     private class RequestAdapter extends RecyclerView.Adapter<RequestAdapter.ViewHolder> {
-        private List<DonationRequest> requests;
+        private final List<DonationRequest> requests;
 
         public RequestAdapter(List<DonationRequest> requests) {
             this.requests = requests;
@@ -148,7 +149,8 @@ public class MakeRequestActivity extends AppCompatActivity {
             DonationRequest request = requests.get(position);
             
             holder.tvBloodGroup.setText(request.getBloodGroup());
-            holder.tvTitle.setText("Emergency " + request.getBloodGroup() + " Blood Needed");
+            String titleText = "Emergency " + request.getBloodGroup() + " Blood Needed";
+            holder.tvTitle.setText(titleText);
             holder.tvLocation.setText(request.getLocation());
             
             SimpleDateFormat sdf = new SimpleDateFormat("dd MMM yyyy", Locale.getDefault());
@@ -157,7 +159,7 @@ public class MakeRequestActivity extends AppCompatActivity {
             if ("accepted".equals(request.getStatus())) {
                 holder.btnDecline.setVisibility(View.GONE);
                 if (loggedMobile != null && loggedMobile.equals(request.getUserMobile())) {
-                    holder.btnAccept.setText("Track Donor");
+                    holder.btnAccept.setText(R.string.track_donor_label);
                     holder.btnAccept.setOnClickListener(v -> {
                         Intent intent = new Intent(MakeRequestActivity.this, TrackingActivity.class);
                         intent.putExtra("donorMobile", request.getAcceptedBy());
@@ -165,15 +167,15 @@ public class MakeRequestActivity extends AppCompatActivity {
                         overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_left);
                     });
                 } else if (loggedMobile != null && loggedMobile.equals(request.getAcceptedBy())) {
-                    holder.btnAccept.setText("Accepted (You)");
+                    holder.btnAccept.setText(R.string.accepted_you_label);
                     holder.btnAccept.setEnabled(false);
                 } else {
-                    holder.btnAccept.setText("Accepted");
+                    holder.btnAccept.setText(R.string.accepted_label);
                     holder.btnAccept.setEnabled(false);
                 }
             } else {
                 holder.btnDecline.setVisibility(View.VISIBLE);
-                holder.btnAccept.setText("Accept");
+                holder.btnAccept.setText(R.string.accept_label);
                 holder.btnAccept.setEnabled(true);
                 
                 if (loggedMobile != null && loggedMobile.equals(request.getUserMobile())) {
@@ -191,9 +193,9 @@ public class MakeRequestActivity extends AppCompatActivity {
             
             DatabaseReference reqRef = FirebaseDatabase.getInstance().getReference("donationRequests").child(request.getRequestId());
             reqRef.child("status").setValue("accepted");
-            reqRef.child("acceptedBy").setValue(loggedMobile).addOnSuccessListener(aVoid -> {
-                Toast.makeText(MakeRequestActivity.this, "Request Accepted! Location sharing started.", Toast.LENGTH_SHORT).show();
-            });
+            reqRef.child("acceptedBy").setValue(loggedMobile).addOnSuccessListener(aVoid -> 
+                Toast.makeText(MakeRequestActivity.this, "Request Accepted!", Toast.LENGTH_SHORT).show()
+            );
         }
 
         @Override
