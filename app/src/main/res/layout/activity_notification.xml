@@ -29,7 +29,8 @@
                 android:layout_height="48dp"
                 android:padding="12dp"
                 android:src="@drawable/icons8_back_arrow_24"
-                app:tint="@android:color/white" />
+                app:tint="@android:color/white"
+                android:contentDescription="@string/back_button_description" />
 
             <TextView
                 android:layout_width="wrap_content"
@@ -50,6 +51,19 @@
         android:paddingTop="8dp"
         android:clipToPadding="false"
         app:layout_constraintBottom_toTopOf="@id/bottom_navigation_container"
+        app:layout_constraintTop_toBottomOf="@id/header_container" />
+
+    <TextView
+        android:id="@+id/tvEmptyNotifications"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="No notifications found"
+        android:textColor="#757575"
+        android:textSize="16sp"
+        android:visibility="gone"
+        app:layout_constraintBottom_toTopOf="@id/bottom_navigation_container"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/header_container" />
 
     <com.google.android.material.card.MaterialCardView
@@ -79,11 +93,12 @@
                     android:layout_width="24dp"
                     android:layout_height="24dp"
                     android:src="@drawable/icons8_home_48"
-                    app:tint="@color/colorPrimary" />
+                    app:tint="@color/colorPrimary"
+                    android:contentDescription="@string/home" />
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Home"
+                    android:text="@string/home"
                     android:textColor="@color/colorPrimary"
                     android:textSize="10sp" />
             </LinearLayout>
@@ -101,11 +116,12 @@
                     android:layout_width="24dp"
                     android:layout_height="24dp"
                     android:src="@drawable/icons8_oil_massage_50"
-                    app:tint="@color/colorPrimary" />
+                    app:tint="@color/colorPrimary"
+                    android:contentDescription="@string/donors" />
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Donors"
+                    android:text="@string/donors"
                     android:textColor="@color/colorPrimary"
                     android:textSize="10sp" />
             </LinearLayout>
@@ -115,7 +131,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginHorizontal="8dp"
-                android:contentDescription="Make a blood request"
+                android:contentDescription="@string/make_request"
                 android:src="@android:drawable/ic_input_add"
                 app:backgroundTint="@color/colorPrimary"
                 app:fabSize="normal"
@@ -134,11 +150,12 @@
                     android:layout_width="24dp"
                     android:layout_height="24dp"
                     android:src="@drawable/icons8_blood_50"
-                    app:tint="@color/colorPrimary" />
+                    app:tint="@color/colorPrimary"
+                    android:contentDescription="@string/need" />
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Need"
+                    android:text="@string/need"
                     android:textColor="@color/colorPrimary"
                     android:textSize="10sp" />
             </LinearLayout>
@@ -156,11 +173,12 @@
                     android:layout_width="24dp"
                     android:layout_height="24dp"
                     android:src="@drawable/user"
-                    app:tint="@color/colorPrimary" />
+                    app:tint="@color/colorPrimary"
+                    android:contentDescription="@string/profile" />
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Profile"
+                    android:text="@string/profile"
                     android:textColor="@color/colorPrimary"
                     android:textSize="10sp" />
             </LinearLayout>

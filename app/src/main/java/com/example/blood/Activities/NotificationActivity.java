@@ -25,6 +25,7 @@ import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 public class NotificationActivity extends AppCompatActivity {
@@ -33,6 +34,7 @@ public class NotificationActivity extends AppCompatActivity {
     private NotificationAdapter adapter;
     private List<Notification> notificationList;
     private DatabaseReference databaseReference;
+    private TextView tvEmptyNotifications;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -44,6 +46,7 @@ public class NotificationActivity extends AppCompatActivity {
             btnBack.setOnClickListener(v -> finish());
         }
 
+        tvEmptyNotifications = findViewById(R.id.tvEmptyNotifications);
         rvNotifications = findViewById(R.id.rvNotifications);
         rvNotifications.setLayoutManager(new LinearLayoutManager(this));
         notificationList = new ArrayList<>();
@@ -61,15 +64,28 @@ public class NotificationActivity extends AppCompatActivity {
     }
 
     private void fetchNotifications(String mobile) {
-        databaseReference = FirebaseDatabase.getInstance().getReference("notifications").child(mobile);
+        // Path matches MakeRequestActivity and updated DonorResultsActivity
+        databaseReference = FirebaseDatabase.getInstance().getReference("Notifications").child(mobile);
         databaseReference.addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
                 notificationList.clear();
                 for (DataSnapshot dataSnapshot : snapshot.getChildren()) {
                     Notification notification = dataSnapshot.getValue(Notification.class);
-                    notificationList.add(notification);
+                    if (notification != null) {
+                        notificationList.add(notification);
+                    }
                 }
+                
+                // Show newest notifications first
+                Collections.reverse(notificationList);
+                
+                if (notificationList.isEmpty()) {
+                    if (tvEmptyNotifications != null) tvEmptyNotifications.setVisibility(View.VISIBLE);
+                } else {
+                    if (tvEmptyNotifications != null) tvEmptyNotifications.setVisibility(View.GONE);
+                }
+                
                 adapter.notifyDataSetChanged();
             }
 
@@ -80,11 +96,17 @@ public class NotificationActivity extends AppCompatActivity {
     }
 
     private void setupNavigation() {
-        findViewById(R.id.home_button).setOnClickListener(v -> startActivity(new Intent(this, MainActivity.class)));
-        findViewById(R.id.donors_button).setOnClickListener(v -> startActivity(new Intent(this, SearchActivity.class)));
-        findViewById(R.id.make_request_fab).setOnClickListener(v -> startActivity(new Intent(this, MakeRequestActivity.class)));
-        findViewById(R.id.need_button).setOnClickListener(v -> startActivity(new Intent(this, MakeRequestActivity.class)));
-        findViewById(R.id.menu_bottom_nav).setOnClickListener(v -> startActivity(new Intent(this, MenuActivity.class)));
+        View home = findViewById(R.id.home_button);
+        View donors = findViewById(R.id.donors_button);
+        View makeRequest = findViewById(R.id.make_request_fab);
+        View need = findViewById(R.id.need_button);
+        View menu = findViewById(R.id.menu_bottom_nav);
+
+        if (home != null) home.setOnClickListener(v -> startActivity(new Intent(this, MainActivity.class)));
+        if (donors != null) donors.setOnClickListener(v -> startActivity(new Intent(this, SearchActivity.class)));
+        if (makeRequest != null) makeRequest.setOnClickListener(v -> startActivity(new Intent(this, MakeRequestActivity.class)));
+        if (need != null) need.setOnClickListener(v -> startActivity(new Intent(this, MakeRequestActivity.class)));
+        if (menu != null) menu.setOnClickListener(v -> startActivity(new Intent(this, MenuActivity.class)));
     }
 
     private class NotificationAdapter extends RecyclerView.Adapter<NotificationAdapter.ViewHolder> {

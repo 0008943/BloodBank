@@ -8,6 +8,8 @@ public class DonationRequest {
     private String location;
     private String userMobile;
     private long timestamp;
+    private String status; // pending, accepted, completed
+    private String acceptedBy; // donor mobile number
 
     public DonationRequest() {
     }
@@ -20,6 +22,8 @@ public class DonationRequest {
         this.location = location;
         this.userMobile = userMobile;
         this.timestamp = timestamp;
+        this.status = "pending";
+        this.acceptedBy = "";
     }
 
     public String getRequestId() { return requestId; }
@@ -29,4 +33,8 @@ public class DonationRequest {
     public String getLocation() { return location; }
     public String getUserMobile() { return userMobile; }
     public long getTimestamp() { return timestamp; }
+    public String getStatus() { return status; }
+    public void setStatus(String status) { this.status = status; }
+    public String getAcceptedBy() { return acceptedBy; }
+    public void setAcceptedBy(String acceptedBy) { this.acceptedBy = acceptedBy; }
 }

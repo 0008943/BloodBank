@@ -5,16 +5,20 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
+import android.content.res.ColorStateList;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.util.Base64;
+import android.view.LayoutInflater;
 import android.view.View;
+import android.view.ViewGroup;
 import android.view.animation.OvershootInterpolator;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
 import androidx.annotation.NonNull;
@@ -46,8 +50,10 @@ import com.google.firebase.database.ValueEventListener;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
@@ -55,7 +61,8 @@ import java.util.concurrent.TimeUnit;
 public class MainActivity extends AppCompatActivity {
 
     private TextView tvHelloName, tvUserLocation, tvBannerDays, tvBannerTitle;
-    private ImageView userAvatar, btnNotification;
+    private ImageView userAvatar, btnNotification, ivVerifiedBadge;
+    private View notificationBadge;
     private DatabaseReference databaseReference;
     private String loggedMobile;
     private CardView findDonorsCard, requestBloodCard, bloodInstructionsCard;
@@ -63,6 +70,9 @@ public class MainActivity extends AppCompatActivity {
     private FusedLocationProviderClient fusedLocationClient;
     private BarChart bloodRequestsChart;
     private MaterialButton btnBecomeDonor;
+    private RecyclerView donorRecyclerView;
+    private RequestAdapter requestAdapter;
+    private List<DonationRequest> requestList;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -78,7 +88,9 @@ public class MainActivity extends AppCompatActivity {
         tvBannerTitle = findViewById(R.id.tvBannerTitle);
         btnBecomeDonor = findViewById(R.id.btnBecomeDonor);
         userAvatar = findViewById(R.id.user_avatar);
-        RecyclerView donorRecyclerView = findViewById(R.id.donor_recycler_view);
+        ivVerifiedBadge = findViewById(R.id.ivVerifiedBadge);
+        notificationBadge = findViewById(R.id.notification_badge);
+        donorRecyclerView = findViewById(R.id.donor_recycler_view);
         FloatingActionButton makeRequestFab = findViewById(R.id.make_request_fab);
         menuBottomNav = findViewById(R.id.menu_bottom_nav);
         btnNotification = findViewById(R.id.btnNotification);
@@ -94,6 +106,9 @@ public class MainActivity extends AppCompatActivity {
 
         if (donorRecyclerView != null) {
             donorRecyclerView.setLayoutManager(new LinearLayoutManager(this));
+            requestList = new ArrayList<>();
+            requestAdapter = new RequestAdapter(requestList);
+            donorRecyclerView.setAdapter(requestAdapter);
         }
 
         SharedPreferences sharedPreferences = getSharedPreferences("AppPrefs", Context.MODE_PRIVATE);
@@ -103,15 +118,19 @@ public class MainActivity extends AppCompatActivity {
             loadUserData();
             fetchBloodRequests();
             updateLiveLocation();
+            listenForNotifications();
         }
 
         setClickListeners();
 
-        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {
-            Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
-            v.setPadding(systemBars.left, 0, systemBars.right, 0);
-            return insets;
-        });
+        View mainView = findViewById(R.id.main);
+        if (mainView != null) {
+            ViewCompat.setOnApplyWindowInsetsListener(mainView, (v, insets) -> {
+                Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
+                v.setPadding(systemBars.left, 0, systemBars.right, 0);
+                return insets;
+            });
+        }
 
         animateView(findViewById(R.id.header_container), -100f, 0);
         animateView(findViewById(R.id.banner_scroll), 100f, 200);
@@ -120,7 +139,10 @@ public class MainActivity extends AppCompatActivity {
         animateView(findViewById(R.id.donation_request_header), 100f, 600);
         
         if (makeRequestFab != null) {
-            makeRequestFab.setOnClickListener(v -> startActivity(new Intent(MainActivity.this, MakeRequestActivity.class)));
+            makeRequestFab.setOnClickListener(v -> {
+                startActivity(new Intent(MainActivity.this, MakeRequestActivity.class));
+                overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_left);
+            });
         }
     }
 
@@ -178,11 +200,22 @@ public class MainActivity extends AppCompatActivity {
                     String name = snapshot.child("name").getValue(String.class);
                     String imageStr = snapshot.child("profileImageUrl").getValue(String.class);
                     String nextDonation = snapshot.child("nextDonation").getValue(String.class);
+                    Boolean isAvailable = snapshot.child("isAvailable").getValue(Boolean.class);
+                    Long lifeSaved = snapshot.child("lifeSaved").getValue(Long.class);
+                    
+                    long donations = lifeSaved != null ? lifeSaved : 0;
+                    boolean isVerified = (isAvailable != null && isAvailable) || donations >= 10;
 
                     tvHelloName.setText("Hello " + (name != null ? name : "User") + "!");
                     tvUserLocation.setText("User ID: " + loggedMobile);
 
-                    updateBannerCountdown(nextDonation);
+                    updateBannerCountdown(nextDonation, isVerified);
+
+                    if (isVerified) {
+                        ivVerifiedBadge.setVisibility(View.VISIBLE);
+                    } else {
+                        ivVerifiedBadge.setVisibility(View.GONE);
+                    }
 
                     if (imageStr != null && !imageStr.isEmpty()) {
                         try {
@@ -202,13 +235,30 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
-    private void updateBannerCountdown(String nextDonation) {
+    private void updateBannerCountdown(String nextDonation, boolean isVerified) {
         if (tvBannerDays == null || tvBannerTitle == null) return;
+
+        if (isVerified) {
+            tvBannerTitle.setText("Account Status");
+            tvBannerDays.setText("Verified Hero");
+            if (btnBecomeDonor != null) {
+                btnBecomeDonor.setText("Verified");
+                btnBecomeDonor.setBackgroundTintList(ColorStateList.valueOf(Color.parseColor("#4CAF50"))); // Green color
+                btnBecomeDonor.setIconResource(R.drawable.ic_verified);
+                btnBecomeDonor.setEnabled(false);
+            }
+            return;
+        }
 
         if (nextDonation == null || nextDonation.equals("Not available") || nextDonation.isEmpty()) {
             tvBannerTitle.setText("You are eligible to");
             tvBannerDays.setText("Donate Now!");
-            if (btnBecomeDonor != null) btnBecomeDonor.setText("Become a Donor");
+            if (btnBecomeDonor != null) {
+                btnBecomeDonor.setText("Become a Donor");
+                btnBecomeDonor.setBackgroundTintList(ColorStateList.valueOf(Color.parseColor("#F43232"))); // Reset to Primary
+                btnBecomeDonor.setIconResource(0);
+                btnBecomeDonor.setEnabled(true);
+            }
             return;
         }
 
@@ -221,13 +271,21 @@ public class MainActivity extends AppCompatActivity {
                 long diffInMs = donationDate.getTime() - today.getTime();
                 long diffInDays = TimeUnit.MILLISECONDS.toDays(diffInMs);
                 
-                tvBannerTitle.setText("You can become a Blood Donor in");
+                tvBannerTitle.setText("Next Eligibility In");
                 tvBannerDays.setText(diffInDays + (diffInDays == 1 ? " Day" : " Days"));
-                if (btnBecomeDonor != null) btnBecomeDonor.setText("View Schedule");
+                if (btnBecomeDonor != null) {
+                    btnBecomeDonor.setText("View Schedule");
+                    btnBecomeDonor.setBackgroundTintList(ColorStateList.valueOf(Color.parseColor("#F43232")));
+                    btnBecomeDonor.setEnabled(true);
+                }
             } else {
                 tvBannerTitle.setText("You are eligible to");
                 tvBannerDays.setText("Donate Now!");
-                if (btnBecomeDonor != null) btnBecomeDonor.setText("Become a Donor");
+                if (btnBecomeDonor != null) {
+                    btnBecomeDonor.setText("Become a Donor");
+                    btnBecomeDonor.setBackgroundTintList(ColorStateList.valueOf(Color.parseColor("#F43232")));
+                    btnBecomeDonor.setEnabled(true);
+                }
             }
         } catch (Exception e) {
             tvBannerTitle.setText("Check your eligibility");
@@ -244,13 +302,21 @@ public class MainActivity extends AppCompatActivity {
                 String[] groups = {"A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"};
                 for (String g : groups) bloodGroupCounts.put(g, 0);
 
+                requestList.clear();
                 for (DataSnapshot requestSnapshot : snapshot.getChildren()) {
-                    String bloodGroup = requestSnapshot.child("bloodGroup").getValue(String.class);
-                    if (bloodGroup != null && bloodGroupCounts.containsKey(bloodGroup)) {
-                        Integer currentCount = bloodGroupCounts.get(bloodGroup);
-                        bloodGroupCounts.put(bloodGroup, (currentCount != null ? currentCount : 0) + 1);
+                    DonationRequest request = requestSnapshot.getValue(DonationRequest.class);
+                    if (request != null) {
+                        requestList.add(request);
+                        String bloodGroup = request.getBloodGroup();
+                        if (bloodGroup != null && bloodGroupCounts.containsKey(bloodGroup)) {
+                            Integer currentCount = bloodGroupCounts.get(bloodGroup);
+                            bloodGroupCounts.put(bloodGroup, (currentCount != null ? currentCount : 0) + 1);
+                        }
                     }
                 }
+                
+                Collections.reverse(requestList); // Newest first
+                requestAdapter.notifyDataSetChanged();
                 updateChart(bloodGroupCounts);
             }
 
@@ -283,18 +349,66 @@ public class MainActivity extends AppCompatActivity {
         bloodRequestsChart.invalidate(); // Refresh the chart
     }
 
+    private void listenForNotifications() {
+        if (loggedMobile == null) return;
+        DatabaseReference notifRef = FirebaseDatabase.getInstance().getReference("Notifications").child(loggedMobile);
+        notifRef.addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot snapshot) {
+                if (snapshot.exists() && snapshot.getChildrenCount() > 0) {
+                    notificationBadge.setVisibility(View.VISIBLE);
+                } else {
+                    notificationBadge.setVisibility(View.GONE);
+                }
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) {}
+        });
+    }
+
     private void setClickListeners() {
-        userAvatar.setOnClickListener(v -> startActivity(new Intent(MainActivity.this, EditProfileActivity.class)));
-        userInfoLayout.setOnClickListener(v -> startActivity(new Intent(MainActivity.this, MenuActivity.class)));
-        btnNotification.setOnClickListener(v -> startActivity(new Intent(MainActivity.this, NotificationActivity.class)));
-        findDonorsCard.setOnClickListener(v -> startActivity(new Intent(MainActivity.this, SearchActivity.class)));
-        requestBloodCard.setOnClickListener(v -> startActivity(new Intent(MainActivity.this, MakeRequestActivity.class)));
-        bloodInstructionsCard.setOnClickListener(v -> startActivity(new Intent(MainActivity.this, BloodInstructionsActivity.class)));
-        donorsButton.setOnClickListener(v -> startActivity(new Intent(MainActivity.this, SearchActivity.class)));
-        needButton.setOnClickListener(v -> startActivity(new Intent(MainActivity.this, MakeRequestActivity.class)));
-        menuBottomNav.setOnClickListener(v -> startActivity(new Intent(MainActivity.this, MenuActivity.class)));
+        userAvatar.setOnClickListener(v -> {
+            startActivity(new Intent(MainActivity.this, EditProfileActivity.class));
+            overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_left);
+        });
+        userInfoLayout.setOnClickListener(v -> {
+            startActivity(new Intent(MainActivity.this, MenuActivity.class));
+            overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_left);
+        });
+        btnNotification.setOnClickListener(v -> {
+            startActivity(new Intent(MainActivity.this, NotificationActivity.class));
+            overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_left);
+        });
+        findDonorsCard.setOnClickListener(v -> {
+            startActivity(new Intent(MainActivity.this, SearchActivity.class));
+            overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_left);
+        });
+        requestBloodCard.setOnClickListener(v -> {
+            startActivity(new Intent(MainActivity.this, MakeRequestActivity.class));
+            overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_left);
+        });
+        bloodInstructionsCard.setOnClickListener(v -> {
+            startActivity(new Intent(MainActivity.this, BloodInstructionsActivity.class));
+            overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_left);
+        });
+        donorsButton.setOnClickListener(v -> {
+            startActivity(new Intent(MainActivity.this, SearchActivity.class));
+            overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_left);
+        });
+        needButton.setOnClickListener(v -> {
+            startActivity(new Intent(MainActivity.this, MakeRequestActivity.class));
+            overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_left);
+        });
+        menuBottomNav.setOnClickListener(v -> {
+            startActivity(new Intent(MainActivity.this, MenuActivity.class));
+            overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_left);
+        });
         if (btnBecomeDonor != null) {
-            btnBecomeDonor.setOnClickListener(v -> startActivity(new Intent(MainActivity.this, BecomeDonorActivity.class)));
+            btnBecomeDonor.setOnClickListener(v -> {
+                startActivity(new Intent(MainActivity.this, BecomeDonorActivity.class));
+                overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_left);
+            });
         }
     }
 
@@ -309,6 +423,93 @@ public class MainActivity extends AppCompatActivity {
                     .setStartDelay(delay)
                     .setInterpolator(new OvershootInterpolator(1.2f))
                     .start();
+        }
+    }
+
+    private class RequestAdapter extends RecyclerView.Adapter<RequestAdapter.ViewHolder> {
+        private List<DonationRequest> requests;
+
+        public RequestAdapter(List<DonationRequest> requests) {
+            this.requests = requests;
+        }
+
+        @NonNull
+        @Override
+        public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+            View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_blood_request, parent, false);
+            return new ViewHolder(view);
+        }
+
+        @Override
+        public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
+            DonationRequest request = requests.get(position);
+            
+            holder.tvBloodGroup.setText(request.getBloodGroup());
+            holder.tvTitle.setText("Emergency " + request.getBloodGroup() + " Blood Needed");
+            holder.tvLocation.setText(request.getLocation());
+            
+            SimpleDateFormat sdf = new SimpleDateFormat("dd MMM yyyy", Locale.getDefault());
+            holder.tvDate.setText(sdf.format(new Date(request.getTimestamp())));
+
+            if ("accepted".equals(request.getStatus())) {
+                holder.btnDecline.setVisibility(View.GONE);
+                if (loggedMobile != null && loggedMobile.equals(request.getUserMobile())) {
+                    holder.btnAccept.setText("Track Donor");
+                    holder.btnAccept.setOnClickListener(v -> {
+                        Intent intent = new Intent(MainActivity.this, TrackingActivity.class);
+                        intent.putExtra("donorMobile", request.getAcceptedBy());
+                        startActivity(intent);
+                        overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_left);
+                    });
+                } else if (loggedMobile != null && loggedMobile.equals(request.getAcceptedBy())) {
+                    holder.btnAccept.setText("Accepted (You)");
+                    holder.btnAccept.setEnabled(false);
+                } else {
+                    holder.btnAccept.setText("Accepted");
+                    holder.btnAccept.setEnabled(false);
+                }
+            } else {
+                holder.btnDecline.setVisibility(View.VISIBLE);
+                holder.btnAccept.setText("Accept");
+                holder.btnAccept.setEnabled(true);
+                
+                if (loggedMobile != null && loggedMobile.equals(request.getUserMobile())) {
+                    holder.btnAccept.setEnabled(false);
+                    holder.btnDecline.setEnabled(false);
+                }
+
+                holder.btnAccept.setOnClickListener(v -> acceptRequest(request));
+                holder.btnDecline.setOnClickListener(v -> Toast.makeText(MainActivity.this, "Request Declined", Toast.LENGTH_SHORT).show());
+            }
+        }
+
+        private void acceptRequest(DonationRequest request) {
+            if (loggedMobile == null) return;
+            DatabaseReference reqRef = FirebaseDatabase.getInstance().getReference("donationRequests").child(request.getRequestId());
+            reqRef.child("status").setValue("accepted");
+            reqRef.child("acceptedBy").setValue(loggedMobile).addOnSuccessListener(aVoid -> {
+                Toast.makeText(MainActivity.this, "Request Accepted!", Toast.LENGTH_SHORT).show();
+            });
+        }
+
+        @Override
+        public int getItemCount() {
+            return requests.size();
+        }
+
+        class ViewHolder extends RecyclerView.ViewHolder {
+            TextView tvBloodGroup, tvTitle, tvLocation, tvDate;
+            MaterialButton btnAccept, btnDecline;
+
+            ViewHolder(View v) {
+                super(v);
+                tvBloodGroup = v.findViewById(R.id.tvBloodGroup);
+                tvTitle = v.findViewById(R.id.tvTitle);
+                tvLocation = v.findViewById(R.id.tvLocation);
+                tvDate = v.findViewById(R.id.tvDate);
+                btnAccept = v.findViewById(R.id.btnAccept);
+                btnDecline = v.findViewById(R.id.btnDecline);
+            }
         }
     }
 }

@@ -1,0 +1,183 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginHorizontal="16dp"
+    android:layout_marginVertical="10dp"
+    app:cardCornerRadius="20dp"
+    app:cardElevation="6dp"
+    app:cardBackgroundColor="@android:color/white"
+    app:strokeWidth="0dp">
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:padding="20dp">
+
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/blood_group_badge"
+            android:layout_width="56dp"
+            android:layout_height="56dp"
+            app:cardCornerRadius="28dp"
+            app:cardElevation="0dp"
+            app:cardBackgroundColor="#FFF1F1"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent">
+
+            <FrameLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent">
+
+                <ImageView
+                    android:layout_width="32dp"
+                    android:layout_height="32dp"
+                    android:layout_gravity="center"
+                    android:src="@drawable/ic_blood_drop"
+                    app:tint="@color/colorPrimary" />
+
+                <TextView
+                    android:id="@+id/tvBloodGroup"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center"
+                    android:layout_marginTop="2dp"
+                    android:fontFamily="sans-serif-black"
+                    android:text="A+"
+                    android:textColor="@color/colorPrimary"
+                    android:textSize="12sp" />
+            </FrameLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+        <TextView
+            android:id="@+id/tvUrgencyTag"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="@drawable/edittext_bg"
+            android:backgroundTint="#FFEBEB"
+            android:fontFamily="sans-serif-black"
+            android:paddingHorizontal="10dp"
+            android:paddingVertical="4dp"
+            android:text="URGENT"
+            android:textColor="@color/colorPrimary"
+            android:textSize="10sp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <TextView
+            android:id="@+id/tvTitle"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="16dp"
+            android:layout_marginTop="4dp"
+            android:fontFamily="sans-serif-medium"
+            android:text="Emergency Blood Needed"
+            android:textColor="#212121"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            app:layout_constraintEnd_toStartOf="@+id/tvUrgencyTag"
+            app:layout_constraintStart_toEndOf="@id/blood_group_badge"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <LinearLayout
+            android:id="@+id/info_layout"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="16dp"
+            android:layout_marginTop="8dp"
+            android:orientation="vertical"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toEndOf="@id/blood_group_badge"
+            app:layout_constraintTop_toBottomOf="@id/tvTitle">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
+
+                <ImageView
+                    android:layout_width="16dp"
+                    android:layout_height="16dp"
+                    android:src="@drawable/ic_modern_location"
+                    app:tint="#757575" />
+
+                <TextView
+                    android:id="@+id/tvLocation"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="6dp"
+                    android:fontFamily="sans-serif"
+                    android:text="Better life Hospital"
+                    android:textColor="#757575"
+                    android:textSize="13sp" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
+
+                <ImageView
+                    android:layout_width="16dp"
+                    android:layout_height="16dp"
+                    android:src="@android:drawable/ic_menu_recent_history"
+                    app:tint="#757575" />
+
+                <TextView
+                    android:id="@+id/tvDate"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="6dp"
+                    android:fontFamily="sans-serif"
+                    android:text="12 Sep 2024"
+                    android:textColor="#757575"
+                    android:textSize="13sp" />
+            </LinearLayout>
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="24dp"
+            android:orientation="horizontal"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/info_layout">
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnAccept"
+                android:layout_width="0dp"
+                android:layout_height="56dp"
+                android:layout_weight="1"
+                android:layout_marginEnd="8dp"
+                android:backgroundTint="@color/colorPrimary"
+                android:fontFamily="sans-serif-medium"
+                android:text="Accept"
+                android:textAllCaps="false"
+                android:textColor="@android:color/white"
+                android:textSize="16sp"
+                app:cornerRadius="14dp"
+                app:elevation="2dp" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnDecline"
+                style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                android:layout_width="0dp"
+                android:layout_height="56dp"
+                android:layout_weight="1"
+                android:layout_marginStart="8dp"
+                android:fontFamily="sans-serif-medium"
+                android:text="Decline"
+                android:textAllCaps="false"
+                android:textColor="#212121"
+                android:textSize="16sp"
+                app:cornerRadius="14dp"
+                app:strokeColor="#E0E0E0"
+                app:strokeWidth="1.5dp" />
+        </LinearLayout>
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+</com.google.android.material.card.MaterialCardView>

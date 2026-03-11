@@ -1,125 +1,218 @@
 package com.example.blood.Activities;
 
+import android.content.Context;
 import android.content.Intent;
-import android.graphics.Color;
+import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.view.LayoutInflater;
 import android.view.View;
-import android.widget.ArrayAdapter;
-import android.widget.AutoCompleteTextView;
+import android.view.ViewGroup;
 import android.widget.ImageView;
-import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import androidx.activity.EdgeToEdge;
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.graphics.Insets;
-import androidx.core.view.ViewCompat;
-import androidx.core.view.WindowInsetsCompat;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.blood.R;
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
-import com.google.android.material.textfield.TextInputEditText;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
+
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+import java.util.Locale;
 
 public class MakeRequestActivity extends AppCompatActivity {
 
-    private String selectedBloodGroup = "";
-    private View selectedView = null;
-    private TextInputEditText etLocation;
+    private RecyclerView rvRequests;
+    private RequestAdapter adapter;
+    private List<DonationRequest> requestList;
+    private DatabaseReference databaseReference;
+    private String loggedMobile;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        EdgeToEdge.enable(this);
         setContentView(R.layout.activity_request);
 
+        SharedPreferences sharedPreferences = getSharedPreferences("AppPrefs", Context.MODE_PRIVATE);
+        loggedMobile = sharedPreferences.getString("loggedMobile", null);
+
         ImageView btnBack = findViewById(R.id.btnBack);
-        View btnNotification = findViewById(R.id.btnNotification);
-        MaterialButton findDonorButton = findViewById(R.id.find_donor_button);
-        AutoCompleteTextView bloodUnitSpinner = findViewById(R.id.blood_unit_spinner);
-        etLocation = findViewById(R.id.etLocation);
+        ImageView btnNotification = findViewById(R.id.btnNotification);
+        FloatingActionButton fabAddRequest = findViewById(R.id.make_request_fab);
 
-        // Setup Blood Unit Spinner
-        String[] units = {"1", "2", "3", "4", "5", "6", "7", "8", "9", "10"};
-        ArrayAdapter<String> adapter = new ArrayAdapter<>(this, android.R.layout.simple_dropdown_item_1line, units);
-        if (bloodUnitSpinner != null) {
-            bloodUnitSpinner.setAdapter(adapter);
+        rvRequests = findViewById(R.id.rvRequests);
+        rvRequests.setLayoutManager(new LinearLayoutManager(this));
+        requestList = new ArrayList<>();
+        adapter = new RequestAdapter(requestList);
+        rvRequests.setAdapter(adapter);
+
+        databaseReference = FirebaseDatabase.getInstance().getReference("donationRequests");
+
+        fetchRequests();
+
+        if (btnBack != null) {
+            btnBack.setOnClickListener(v -> {
+                finish();
+                overridePendingTransition(R.anim.slide_in_left, R.anim.slide_out_right);
+            });
         }
-
-        // Navigation components
-        LinearLayout homeButton = findViewById(R.id.home_button);
-        LinearLayout donorsButton = findViewById(R.id.donors_button);
-        LinearLayout needButton = findViewById(R.id.need_button);
-        LinearLayout menuBottomNav = findViewById(R.id.menu_bottom_nav);
-        FloatingActionButton makeRequestFab = findViewById(R.id.make_request_fab);
-
-        // Set Click Listeners for Navigation
-        if (homeButton != null) homeButton.setOnClickListener(v -> startActivity(new Intent(this, MainActivity.class)));
-        if (donorsButton != null) donorsButton.setOnClickListener(v -> startActivity(new Intent(this, SearchActivity.class)));
-        if (needButton != null) needButton.setOnClickListener(v -> startActivity(new Intent(this, MakeRequestActivity.class)));
-        if (menuBottomNav != null) menuBottomNav.setOnClickListener(v -> startActivity(new Intent(this, MenuActivity.class)));
-        if (makeRequestFab != null) makeRequestFab.setOnClickListener(v -> startActivity(new Intent(this, MakeRequestActivity.class)));
-
-        if (btnBack != null) btnBack.setOnClickListener(v -> finish());
         
         if (btnNotification != null) {
-            btnNotification.setOnClickListener(v -> Toast.makeText(this, "Notifications Clicked", Toast.LENGTH_SHORT).show());
-        }
-
-        setupBloodGroupSelection();
-
-        if (findDonorButton != null) {
-            findDonorButton.setOnClickListener(v -> {
-                if (selectedBloodGroup.isEmpty()) {
-                    Toast.makeText(this, "Please select a blood group", Toast.LENGTH_SHORT).show();
-                    return;
-                }
-                
-                String location = etLocation.getText().toString().trim();
-                
-                Intent intent = new Intent(MakeRequestActivity.this, DonorResultsActivity.class);
-                intent.putExtra("bloodGroup", selectedBloodGroup);
-                intent.putExtra("location", location);
-                startActivity(intent);
+            btnNotification.setOnClickListener(v -> {
+                startActivity(new Intent(this, NotificationActivity.class));
+                overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_left);
             });
         }
 
-        View rootView = findViewById(R.id.main);
-        if (rootView != null) {
-            ViewCompat.setOnApplyWindowInsetsListener(rootView, (v, insets) -> {
-                Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
-                v.setPadding(systemBars.left, systemBars.top, systemBars.right, 0);
-                return insets;
+        if (fabAddRequest != null) {
+            fabAddRequest.setOnClickListener(v -> {
+                Toast.makeText(this, "Add New Request Clicked", Toast.LENGTH_SHORT).show();
             });
         }
+
+        setupNavigation();
     }
 
-    private void setupBloodGroupSelection() {
-        int[] ids = {
-                R.id.blood_group_a_pos, R.id.blood_group_a_neg,
-                R.id.blood_group_b_pos, R.id.blood_group_b_neg,
-                R.id.blood_group_ab_pos, R.id.blood_group_ab_neg,
-                R.id.blood_group_o_pos, R.id.blood_group_o_neg
-        };
-
-        String[] groups = {"A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"};
-
-        for (int i = 0; i < ids.length; i++) {
-            final int index = i;
-            View view = findViewById(ids[i]);
-            if (view != null) {
-                TextView tv = view.findViewById(R.id.blood_group_text);
-                if (tv != null) tv.setText(groups[i]);
-                
-                view.setOnClickListener(v -> {
-                    if (selectedView != null) {
-                        selectedView.setBackgroundColor(Color.TRANSPARENT);
+    private void fetchRequests() {
+        databaseReference.addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot snapshot) {
+                requestList.clear();
+                for (DataSnapshot dataSnapshot : snapshot.getChildren()) {
+                    DonationRequest request = dataSnapshot.getValue(DonationRequest.class);
+                    if (request != null) {
+                        requestList.add(request);
                     }
-                    selectedView = v;
-                    selectedBloodGroup = groups[index];
-                    v.setBackgroundResource(R.drawable.selected_blood_bg);
-                });
+                }
+                adapter.notifyDataSetChanged();
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) {
+                Toast.makeText(MakeRequestActivity.this, "Error: " + error.getMessage(), Toast.LENGTH_SHORT).show();
+            }
+        });
+    }
+
+    private void setupNavigation() {
+        findViewById(R.id.home_button).setOnClickListener(v -> {
+            Intent intent = new Intent(this, MainActivity.class);
+            intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+            startActivity(intent);
+            overridePendingTransition(R.anim.slide_in_left, R.anim.slide_out_right);
+        });
+        findViewById(R.id.donors_button).setOnClickListener(v -> {
+            startActivity(new Intent(this, SearchActivity.class));
+            overridePendingTransition(R.anim.slide_in_left, R.anim.slide_out_right);
+        });
+        findViewById(R.id.need_button).setOnClickListener(v -> { /* Already here */ });
+        findViewById(R.id.menu_bottom_nav).setOnClickListener(v -> {
+            startActivity(new Intent(this, MenuActivity.class));
+            overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_left);
+        });
+    }
+
+    @Override
+    public void onBackPressed() {
+        super.onBackPressed();
+        overridePendingTransition(R.anim.slide_in_left, R.anim.slide_out_right);
+    }
+
+    private class RequestAdapter extends RecyclerView.Adapter<RequestAdapter.ViewHolder> {
+        private List<DonationRequest> requests;
+
+        public RequestAdapter(List<DonationRequest> requests) {
+            this.requests = requests;
+        }
+
+        @NonNull
+        @Override
+        public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+            View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_blood_request, parent, false);
+            return new ViewHolder(view);
+        }
+
+        @Override
+        public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
+            DonationRequest request = requests.get(position);
+            
+            holder.tvBloodGroup.setText(request.getBloodGroup());
+            holder.tvTitle.setText("Emergency " + request.getBloodGroup() + " Blood Needed");
+            holder.tvLocation.setText(request.getLocation());
+            
+            SimpleDateFormat sdf = new SimpleDateFormat("dd MMM yyyy", Locale.getDefault());
+            holder.tvDate.setText(sdf.format(new Date(request.getTimestamp())));
+
+            if ("accepted".equals(request.getStatus())) {
+                holder.btnDecline.setVisibility(View.GONE);
+                if (loggedMobile != null && loggedMobile.equals(request.getUserMobile())) {
+                    holder.btnAccept.setText("Track Donor");
+                    holder.btnAccept.setOnClickListener(v -> {
+                        Intent intent = new Intent(MakeRequestActivity.this, TrackingActivity.class);
+                        intent.putExtra("donorMobile", request.getAcceptedBy());
+                        startActivity(intent);
+                        overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_left);
+                    });
+                } else if (loggedMobile != null && loggedMobile.equals(request.getAcceptedBy())) {
+                    holder.btnAccept.setText("Accepted (You)");
+                    holder.btnAccept.setEnabled(false);
+                } else {
+                    holder.btnAccept.setText("Accepted");
+                    holder.btnAccept.setEnabled(false);
+                }
+            } else {
+                holder.btnDecline.setVisibility(View.VISIBLE);
+                holder.btnAccept.setText("Accept");
+                holder.btnAccept.setEnabled(true);
+                
+                if (loggedMobile != null && loggedMobile.equals(request.getUserMobile())) {
+                    holder.btnAccept.setEnabled(false);
+                    holder.btnDecline.setEnabled(false);
+                }
+
+                holder.btnAccept.setOnClickListener(v -> acceptRequest(request));
+                holder.btnDecline.setOnClickListener(v -> Toast.makeText(MakeRequestActivity.this, "Request Declined", Toast.LENGTH_SHORT).show());
+            }
+        }
+
+        private void acceptRequest(DonationRequest request) {
+            if (loggedMobile == null) return;
+            
+            DatabaseReference reqRef = FirebaseDatabase.getInstance().getReference("donationRequests").child(request.getRequestId());
+            reqRef.child("status").setValue("accepted");
+            reqRef.child("acceptedBy").setValue(loggedMobile).addOnSuccessListener(aVoid -> {
+                Toast.makeText(MakeRequestActivity.this, "Request Accepted! Location sharing started.", Toast.LENGTH_SHORT).show();
+            });
+        }
+
+        @Override
+        public int getItemCount() {
+            return requests.size();
+        }
+
+        class ViewHolder extends RecyclerView.ViewHolder {
+            TextView tvBloodGroup, tvTitle, tvLocation, tvDate;
+            MaterialButton btnAccept, btnDecline;
+
+            ViewHolder(View v) {
+                super(v);
+                tvBloodGroup = v.findViewById(R.id.tvBloodGroup);
+                tvTitle = v.findViewById(R.id.tvTitle);
+                tvLocation = v.findViewById(R.id.tvLocation);
+                tvDate = v.findViewById(R.id.tvDate);
+                btnAccept = v.findViewById(R.id.btnAccept);
+                btnDecline = v.findViewById(R.id.btnDecline);
             }
         }
     }

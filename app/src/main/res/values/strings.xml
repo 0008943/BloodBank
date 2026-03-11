@@ -78,4 +78,11 @@
     <string name="need">Need</string>
     <string name="profile">Profile</string>
     <string name="notification_description">Notifications</string>
+
+    <!-- Donor Item Strings -->
+    <string name="donor_avatar_description">Donor Avatar</string>
+    <string name="call">Call</string>
+    <string name="message">Message</string>
+    <string name="group_label">Group</string>
+    <string name="location_description">Location</string>
 </resources>

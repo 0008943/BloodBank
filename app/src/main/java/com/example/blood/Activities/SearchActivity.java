@@ -6,7 +6,6 @@ import android.view.View;
 import android.view.animation.OvershootInterpolator;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
-import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
@@ -36,7 +35,6 @@ public class SearchActivity extends AppCompatActivity {
         View header = findViewById(R.id.header_container);
         ImageView btnBack = findViewById(R.id.btnBack);
 
-        // Search logic
         if (findDonorsButton != null) {
             findDonorsButton.setOnClickListener(v -> {
                 String city = searchCity.getText().toString().trim();
@@ -55,10 +53,10 @@ public class SearchActivity extends AppCompatActivity {
                 intent.putExtra("city", city);
                 intent.putExtra("bloodGroup", bloodGroup);
                 startActivity(intent);
+                overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_left);
             });
         }
 
-        // Navigation components
         setupNavigation();
 
         if (header != null) {
@@ -68,7 +66,10 @@ public class SearchActivity extends AppCompatActivity {
         }
 
         if (btnBack != null) {
-            btnBack.setOnClickListener(v -> finish());
+            btnBack.setOnClickListener(v -> {
+                finish();
+                overridePendingTransition(R.anim.slide_in_left, R.anim.slide_out_right);
+            });
         }
 
         View rootView = findViewById(R.id.main);
@@ -88,12 +89,32 @@ public class SearchActivity extends AppCompatActivity {
         LinearLayout menuBottomNav = findViewById(R.id.menu_bottom_nav);
         FloatingActionButton makeRequestFab = findViewById(R.id.make_request_fab);
 
-        if (homeButton != null) homeButton.setOnClickListener(v -> startActivity(new Intent(this, MainActivity.class)));
-        if (donorsButton != null) donorsButton.setOnClickListener(v -> {
-            // Already here, maybe just scroll to top or refresh
+        if (homeButton != null) homeButton.setOnClickListener(v -> {
+            Intent intent = new Intent(this, MainActivity.class);
+            intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+            startActivity(intent);
+            overridePendingTransition(R.anim.slide_in_left, R.anim.slide_out_right);
         });
-        if (needButton != null) needButton.setOnClickListener(v -> startActivity(new Intent(this, MakeRequestActivity.class)));
-        if (menuBottomNav != null) menuBottomNav.setOnClickListener(v -> startActivity(new Intent(this, MenuActivity.class)));
-        if (makeRequestFab != null) makeRequestFab.setOnClickListener(v -> startActivity(new Intent(this, MakeRequestActivity.class)));
+        
+        if (needButton != null) needButton.setOnClickListener(v -> {
+            startActivity(new Intent(this, MakeRequestActivity.class));
+            overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_left);
+        });
+        
+        if (menuBottomNav != null) menuBottomNav.setOnClickListener(v -> {
+            startActivity(new Intent(this, MenuActivity.class));
+            overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_left);
+        });
+        
+        if (makeRequestFab != null) makeRequestFab.setOnClickListener(v -> {
+            startActivity(new Intent(this, MakeRequestActivity.class));
+            overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_left);
+        });
+    }
+
+    @Override
+    public void onBackPressed() {
+        super.onBackPressed();
+        overridePendingTransition(R.anim.slide_in_left, R.anim.slide_out_right);
     }
 }

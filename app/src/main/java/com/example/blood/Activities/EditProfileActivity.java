@@ -51,6 +51,7 @@ public class EditProfileActivity extends AppCompatActivity {
     private String loggedMobile;
     private ActivityResultLauncher<String> mGetContent;
     private String encodedImage = "";
+    private SharedPreferences sharedPreferences;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -64,6 +65,9 @@ public class EditProfileActivity extends AppCompatActivity {
         btnBack = findViewById(R.id.btnBack);
         editProfileImage = findViewById(R.id.edit_profile_image);
         cardProfileImage = findViewById(R.id.cardProfileImage);
+
+        sharedPreferences = getSharedPreferences("AppPrefs", Context.MODE_PRIVATE);
+        loggedMobile = sharedPreferences.getString("loggedMobile", null);
 
         // Setup Image Picker
         mGetContent = registerForActivityResult(new ActivityResultContracts.GetContent(),
@@ -81,9 +85,6 @@ public class EditProfileActivity extends AppCompatActivity {
         ArrayAdapter<String> adapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, bloodGroups);
         actvBloodGroup.setAdapter(adapter);
 
-        SharedPreferences sharedPreferences = getSharedPreferences("AppPrefs", Context.MODE_PRIVATE);
-        loggedMobile = sharedPreferences.getString("loggedMobile", null);
-
         if (loggedMobile != null) {
             loadUserData();
         } else {
@@ -91,7 +92,7 @@ public class EditProfileActivity extends AppCompatActivity {
         }
 
         btnBack.setOnClickListener(v -> finish());
-        btnSave.setOnClickListener(v -> updateProfile());
+        btnSave.setOnClickListener(v -> startProfileUpdate());
 
         View rootView = findViewById(R.id.main);
         if (rootView != null) {
@@ -107,17 +108,12 @@ public class EditProfileActivity extends AppCompatActivity {
         try {
             InputStream inputStream = getContentResolver().openInputStream(uri);
             Bitmap bitmap = BitmapFactory.decodeStream(inputStream);
-            
-            // Resize image to keep database small
             Bitmap scaledBitmap = Bitmap.createScaledBitmap(bitmap, 250, 250, true);
-            
             ByteArrayOutputStream baos = new ByteArrayOutputStream();
             scaledBitmap.compress(Bitmap.CompressFormat.JPEG, 70, baos);
             byte[] b = baos.toByteArray();
             encodedImage = Base64.encodeToString(b, Base64.DEFAULT);
-            
             editProfileImage.setImageBitmap(scaledBitmap);
-            Toast.makeText(this, "Image Prepared!", Toast.LENGTH_SHORT).show();
         } catch (Exception e) {
             Toast.makeText(this, "Error processing image", Toast.LENGTH_SHORT).show();
         }
@@ -135,9 +131,11 @@ public class EditProfileActivity extends AppCompatActivity {
                     String imageStr = snapshot.child("profileImageUrl").getValue(String.class);
 
                     if (imageStr != null && !imageStr.isEmpty()) {
-                        byte[] decodedString = Base64.decode(imageStr, Base64.DEFAULT);
-                        Bitmap decodedByte = BitmapFactory.decodeByteArray(decodedString, 0, decodedString.length);
-                        editProfileImage.setImageBitmap(decodedByte);
+                        try {
+                            byte[] decodedString = Base64.decode(imageStr, Base64.DEFAULT);
+                            Bitmap decodedByte = BitmapFactory.decodeByteArray(decodedString, 0, decodedString.length);
+                            editProfileImage.setImageBitmap(decodedByte);
+                        } catch (Exception ignored) {}
                     }
                 }
             }
@@ -147,15 +145,79 @@ public class EditProfileActivity extends AppCompatActivity {
         });
     }
 
-    private void updateProfile() {
-        String name = etName.getText().toString().trim();
-        String bloodGroup = actvBloodGroup.getText().toString().trim();
+    private void startProfileUpdate() {
+        String newName = etName.getText().toString().trim();
+        String newPhone = etPhone.getText().toString().trim();
+        String newBloodGroup = actvBloodGroup.getText().toString().trim();
 
-        if (name.isEmpty()) {
-            etName.setError("Name required");
+        if (newName.isEmpty() || newPhone.isEmpty()) {
+            Toast.makeText(this, "Name and Phone are required", Toast.LENGTH_SHORT).show();
             return;
         }
 
+        if (!newPhone.equals(loggedMobile)) {
+            // Phone number changed - need to migrate account
+            checkIfNewPhoneExists(newPhone, newName, newBloodGroup);
+        } else {
+            // Only other data changed
+            updateProfileData(loggedMobile, newName, newBloodGroup);
+        }
+    }
+
+    private void checkIfNewPhoneExists(String newPhone, String name, String bloodGroup) {
+        FirebaseDatabase.getInstance().getReference("Users").child(newPhone)
+                .addListenerForSingleValueEvent(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(@NonNull DataSnapshot snapshot) {
+                        if (snapshot.exists()) {
+                            etPhone.setError("This phone number is already registered to another account");
+                        } else {
+                            migrateAccount(newPhone, name, bloodGroup);
+                        }
+                    }
+
+                    @Override
+                    public void onCancelled(@NonNull DatabaseError error) {}
+                });
+    }
+
+    private void migrateAccount(String newPhone, String name, String bloodGroup) {
+        DatabaseReference oldRef = FirebaseDatabase.getInstance().getReference("Users").child(loggedMobile);
+        DatabaseReference newRef = FirebaseDatabase.getInstance().getReference("Users").child(newPhone);
+
+        oldRef.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot snapshot) {
+                if (snapshot.exists()) {
+                    Map<String, Object> data = (Map<String, Object>) snapshot.getValue();
+                    if (data != null) {
+                        data.put("name", name);
+                        data.put("number", newPhone);
+                        data.put("bloodGroup", bloodGroup);
+                        if (!encodedImage.isEmpty()) {
+                            data.put("profileImageUrl", encodedImage);
+                        }
+
+                        newRef.setValue(data).addOnCompleteListener(task -> {
+                            if (task.isSuccessful()) {
+                                oldRef.removeValue(); // Delete old account
+                                sharedPreferences.edit().putString("loggedMobile", newPhone).apply();
+                                loggedMobile = newPhone;
+                                Toast.makeText(EditProfileActivity.this, "Account Migrated Successfully!", Toast.LENGTH_SHORT).show();
+                                finish();
+                            }
+                        });
+                    }
+                }
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) {}
+        });
+    }
+
+    private void updateProfileData(String mobile, String name, String bloodGroup) {
+        DatabaseReference ref = FirebaseDatabase.getInstance().getReference("Users").child(mobile);
         Map<String, Object> updates = new HashMap<>();
         updates.put("name", name);
         updates.put("bloodGroup", bloodGroup);
@@ -163,7 +225,7 @@ public class EditProfileActivity extends AppCompatActivity {
             updates.put("profileImageUrl", encodedImage);
         }
 
-        databaseReference.updateChildren(updates).addOnCompleteListener(task -> {
+        ref.updateChildren(updates).addOnCompleteListener(task -> {
             if (task.isSuccessful()) {
                 Toast.makeText(this, "Profile Updated!", Toast.LENGTH_SHORT).show();
                 finish();

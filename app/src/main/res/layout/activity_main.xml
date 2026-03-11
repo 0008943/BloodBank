@@ -36,23 +36,40 @@
                     android:layout_height="wrap_content"
                     android:padding="20dp">
 
-                    <com.google.android.material.card.MaterialCardView
-                        android:id="@+id/profile_card"
-                        android:layout_width="48dp"
-                        android:layout_height="48dp"
-                        app:cardBackgroundColor="@android:color/white"
-                        app:cardCornerRadius="24dp"
+                    <FrameLayout
+                        android:id="@+id/profile_container"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
                         app:layout_constraintStart_toStartOf="parent"
                         app:layout_constraintTop_toTopOf="parent">
 
+                        <com.google.android.material.card.MaterialCardView
+                            android:id="@+id/profile_card"
+                            android:layout_width="56dp"
+                            android:layout_height="56dp"
+                            app:cardBackgroundColor="@android:color/white"
+                            app:cardCornerRadius="28dp"
+                            app:strokeWidth="2dp"
+                            app:strokeColor="@android:color/white">
+
+                            <ImageView
+                                android:id="@+id/user_avatar"
+                                android:layout_width="match_parent"
+                                android:layout_height="match_parent"
+                                android:scaleType="centerCrop"
+                                android:src="@drawable/ic_person_cartoon"
+                                android:contentDescription="@string/profile_image_description" />
+                        </com.google.android.material.card.MaterialCardView>
+
                         <ImageView
-                            android:id="@+id/user_avatar"
-                            android:layout_width="match_parent"
-                            android:layout_height="match_parent"
-                            android:scaleType="centerCrop"
-                            android:src="@drawable/ic_person_cartoon"
-                            android:contentDescription="@string/profile_image_description" />
-                    </com.google.android.material.card.MaterialCardView>
+                            android:id="@+id/ivVerifiedBadge"
+                            android:layout_width="20dp"
+                            android:layout_height="20dp"
+                            android:layout_gravity="bottom|end"
+                            android:src="@drawable/ic_verified"
+                            android:visibility="gone"
+                            tools:visibility="visible" />
+                    </FrameLayout>
 
                     <LinearLayout
                         android:id="@+id/user_info_layout"
@@ -60,9 +77,9 @@
                         android:layout_height="wrap_content"
                         android:layout_marginStart="12dp"
                         android:orientation="vertical"
-                        app:layout_constraintBottom_toBottomOf="@id/profile_card"
-                        app:layout_constraintStart_toEndOf="@id/profile_card"
-                        app:layout_constraintTop_toTopOf="@id/profile_card">
+                        app:layout_constraintBottom_toBottomOf="@id/profile_container"
+                        app:layout_constraintStart_toEndOf="@id/profile_container"
+                        app:layout_constraintTop_toTopOf="@id/profile_container">
 
                         <TextView
                             android:id="@+id/tvHelloName"
@@ -82,16 +99,34 @@
                             android:textSize="12sp" />
                     </LinearLayout>
 
-                    <ImageView
-                        android:id="@+id/btnNotification"
-                        android:layout_width="28dp"
-                        android:layout_height="28dp"
-                        android:src="@drawable/icons8_notification_24"
-                        app:layout_constraintBottom_toBottomOf="@id/profile_card"
+                    <FrameLayout
+                        android:id="@+id/notification_container"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        app:layout_constraintBottom_toBottomOf="@id/profile_container"
                         app:layout_constraintEnd_toEndOf="parent"
-                        app:layout_constraintTop_toTopOf="@id/profile_card"
-                        app:tint="@android:color/white"
-                        android:contentDescription="@string/notification_description" />
+                        app:layout_constraintTop_toTopOf="@id/profile_container">
+
+                        <ImageView
+                            android:id="@+id/btnNotification"
+                            android:layout_width="28dp"
+                            android:layout_height="28dp"
+                            android:src="@drawable/icons8_notification_24"
+                            app:tint="@android:color/white"
+                            android:contentDescription="@string/notification_description" />
+
+                        <View
+                            android:id="@+id/notification_badge"
+                            android:layout_width="10dp"
+                            android:layout_height="10dp"
+                            android:layout_gravity="top|end"
+                            android:layout_marginTop="2dp"
+                            android:layout_marginEnd="2dp"
+                            android:background="@drawable/button_bg"
+                            android:backgroundTint="#FFEB3B"
+                            android:visibility="gone"
+                            tools:visibility="visible" />
+                    </FrameLayout>
 
                 </androidx.constraintlayout.widget.ConstraintLayout>
 
@@ -113,6 +148,7 @@
                     android:paddingBottom="10dp">
 
                     <com.google.android.material.card.MaterialCardView
+                        android:id="@+id/donor_status_card"
                         android:layout_width="280dp"
                         android:layout_height="140dp"
                         android:layout_marginEnd="16dp"
