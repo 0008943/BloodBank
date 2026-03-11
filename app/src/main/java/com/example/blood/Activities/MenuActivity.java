@@ -10,11 +10,11 @@ import android.util.Base64;
 import android.view.View;
 import android.view.animation.OvershootInterpolator;
 import android.widget.ImageView;
-import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
+import androidx.activity.OnBackPressedCallback;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.graphics.Insets;
@@ -28,9 +28,6 @@ import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
-
-import java.util.HashMap;
-import java.util.Map;
 
 public class MenuActivity extends AppCompatActivity {
 
@@ -68,7 +65,6 @@ public class MenuActivity extends AppCompatActivity {
         View logoutItem = findViewById(R.id.menu_item_logout);
         View historyItem = findViewById(R.id.menu_item_history);
 
-        // Set initial states from SharedPreferences (default false/off for first open)
         switchAvailable.setChecked(sharedPreferences.getBoolean("available_to_donate", false));
         switchNotification.setChecked(sharedPreferences.getBoolean("notifications_enabled", false));
         switchTracking.setChecked(sharedPreferences.getBoolean("tracking_enabled", false));
@@ -96,9 +92,20 @@ public class MenuActivity extends AppCompatActivity {
             statsCard.animate().alpha(1f).scaleX(1f).scaleY(1f).setDuration(800).setStartDelay(300).setInterpolator(new OvershootInterpolator(0.8f)).start();
         }
 
-        if (btnBack != null) btnBack.setOnClickListener(v -> finish());
-        if (btnEditProfile != null) btnEditProfile.setOnClickListener(v -> startActivity(new Intent(MenuActivity.this, EditProfileActivity.class)));
-        if (historyItem != null) historyItem.setOnClickListener(v -> startActivity(new Intent(MenuActivity.this, HistoryActivity.class)));
+        if (btnBack != null) btnBack.setOnClickListener(v -> {
+            finish();
+            overridePendingTransition(R.anim.slide_in_left, R.anim.slide_out_right);
+        });
+        
+        if (btnEditProfile != null) btnEditProfile.setOnClickListener(v -> {
+            startActivity(new Intent(MenuActivity.this, EditProfileActivity.class));
+            overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_left);
+        });
+        
+        if (historyItem != null) historyItem.setOnClickListener(v -> {
+            startActivity(new Intent(MenuActivity.this, HistoryActivity.class));
+            overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_left);
+        });
 
         if (logoutItem != null) {
             logoutItem.setOnClickListener(v -> {
@@ -115,6 +122,14 @@ public class MenuActivity extends AppCompatActivity {
                 return insets;
             });
         }
+
+        getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
+            @Override
+            public void handleOnBackPressed() {
+                finish();
+                overridePendingTransition(R.anim.slide_in_left, R.anim.slide_out_right);
+            }
+        });
     }
 
     private void setupSwitchListeners() {
@@ -154,8 +169,8 @@ public class MenuActivity extends AppCompatActivity {
 
                     profileName.setText(name != null ? name : "User");
                     profileUserId.setText("User ID: " + mobile);
-                    tvLifeSaved.setText((lifeSaved != null ? lifeSaved : 0) + " life saved");
-                    tvBloodGroup.setText((bloodGroup != null ? bloodGroup : "N/A") + " Group");
+                    tvLifeSaved.setText(String.format("%s life saved", (lifeSaved != null ? lifeSaved : 0)));
+                    tvBloodGroup.setText(String.format("%s Group", (bloodGroup != null ? bloodGroup : "N/A")));
                     tvNextDonationDate.setText(nextDonation != null ? nextDonation : "Contact Admin");
 
                     if (imageStr != null && !imageStr.isEmpty()) {
@@ -176,10 +191,23 @@ public class MenuActivity extends AppCompatActivity {
     }
 
     private void setupNavigation() {
-        findViewById(R.id.home_button).setOnClickListener(v -> startActivity(new Intent(this, MainActivity.class)));
-        findViewById(R.id.donors_button).setOnClickListener(v -> startActivity(new Intent(this, SearchActivity.class)));
-        findViewById(R.id.make_request_fab).setOnClickListener(v -> startActivity(new Intent(this, MakeRequestActivity.class)));
-        findViewById(R.id.need_button).setOnClickListener(v -> startActivity(new Intent(this, MakeRequestActivity.class)));
-        findViewById(R.id.menu_bottom_nav).setOnClickListener(v -> startActivity(new Intent(this, MenuActivity.class)));
+        findViewById(R.id.home_button).setOnClickListener(v -> {
+            Intent intent = new Intent(this, MainActivity.class);
+            intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+            startActivity(intent);
+            overridePendingTransition(R.anim.slide_in_left, R.anim.slide_out_right);
+        });
+        findViewById(R.id.donors_button).setOnClickListener(v -> {
+            startActivity(new Intent(this, SearchActivity.class));
+            overridePendingTransition(R.anim.slide_in_left, R.anim.slide_out_right);
+        });
+        findViewById(R.id.make_request_fab).setOnClickListener(v -> {
+            startActivity(new Intent(this, MakeRequestActivity.class));
+            overridePendingTransition(R.anim.slide_in_left, R.anim.slide_out_right);
+        });
+        findViewById(R.id.need_button).setOnClickListener(v -> {
+            startActivity(new Intent(this, MakeRequestActivity.class));
+            overridePendingTransition(R.anim.slide_in_left, R.anim.slide_out_right);
+        });
     }
 }

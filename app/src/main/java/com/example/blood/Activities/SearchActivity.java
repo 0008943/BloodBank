@@ -8,6 +8,7 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 
 import androidx.activity.EdgeToEdge;
+import androidx.activity.OnBackPressedCallback;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
@@ -18,10 +19,11 @@ import com.google.android.material.button.MaterialButton;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.textfield.TextInputEditText;
 
+import java.util.Objects;
+
 public class SearchActivity extends AppCompatActivity {
 
     private TextInputEditText searchCity, searchBloodGroup;
-    private MaterialButton findDonorsButton;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -31,14 +33,14 @@ public class SearchActivity extends AppCompatActivity {
 
         searchCity = findViewById(R.id.search_city);
         searchBloodGroup = findViewById(R.id.search_blood_group);
-        findDonorsButton = findViewById(R.id.find_donors_button);
+        MaterialButton findDonorsButton = findViewById(R.id.find_donors_button);
         View header = findViewById(R.id.header_container);
         ImageView btnBack = findViewById(R.id.btnBack);
 
         if (findDonorsButton != null) {
             findDonorsButton.setOnClickListener(v -> {
-                String city = searchCity.getText().toString().trim();
-                String bloodGroup = searchBloodGroup.getText().toString().trim();
+                String city = Objects.requireNonNull(searchCity.getText()).toString().trim();
+                String bloodGroup = Objects.requireNonNull(searchBloodGroup.getText()).toString().trim();
 
                 if (city.isEmpty()) {
                     searchCity.setError("City is required");
@@ -80,11 +82,18 @@ public class SearchActivity extends AppCompatActivity {
                 return insets;
             });
         }
+
+        getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
+            @Override
+            public void handleOnBackPressed() {
+                finish();
+                overridePendingTransition(R.anim.slide_in_left, R.anim.slide_out_right);
+            }
+        });
     }
 
     private void setupNavigation() {
         LinearLayout homeButton = findViewById(R.id.home_button);
-        LinearLayout donorsButton = findViewById(R.id.donors_button);
         LinearLayout needButton = findViewById(R.id.need_button);
         LinearLayout menuBottomNav = findViewById(R.id.menu_bottom_nav);
         FloatingActionButton makeRequestFab = findViewById(R.id.make_request_fab);
@@ -110,11 +119,5 @@ public class SearchActivity extends AppCompatActivity {
             startActivity(new Intent(this, MakeRequestActivity.class));
             overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_left);
         });
-    }
-
-    @Override
-    public void onBackPressed() {
-        super.onBackPressed();
-        overridePendingTransition(R.anim.slide_in_left, R.anim.slide_out_right);
     }
 }

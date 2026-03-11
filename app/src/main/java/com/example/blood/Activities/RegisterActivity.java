@@ -4,12 +4,12 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
-import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.Toast;
 
+import androidx.activity.OnBackPressedCallback;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.blood.R;
@@ -21,8 +21,6 @@ import java.util.Random;
 public class RegisterActivity extends AppCompatActivity {
 
     private EditText nameEt, cityEt, mobileEt, bloodGroupEt, passwordEt;
-    private Button btnSignUp;
-    private ImageView btnBack;
     private DatabaseReference databaseReference;
 
     @Override
@@ -37,28 +35,31 @@ public class RegisterActivity extends AppCompatActivity {
         mobileEt = findViewById(R.id.register_mobile);
         bloodGroupEt = findViewById(R.id.register_blood_group);
         passwordEt = findViewById(R.id.register_password);
-        btnSignUp = findViewById(R.id.btnSignUp);
-        btnBack = findViewById(R.id.btnBack);
+        Button btnSignUp = findViewById(R.id.btnSignUp);
+        ImageView btnBack = findViewById(R.id.btnBack);
 
-        btnSignUp.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                String name = nameEt.getText().toString().trim();
-                String city = cityEt.getText().toString().trim();
-                String mobile = mobileEt.getText().toString().trim();
-                String bloodGroup = bloodGroupEt.getText().toString().trim();
-                String password = passwordEt.getText().toString().trim();
+        btnSignUp.setOnClickListener(view -> {
+            String name = nameEt.getText().toString().trim();
+            String city = cityEt.getText().toString().trim();
+            String mobile = mobileEt.getText().toString().trim();
+            String bloodGroup = bloodGroupEt.getText().toString().trim();
+            String password = passwordEt.getText().toString().trim();
 
-                if (isValid(name, city, mobile, bloodGroup, password)) {
-                    registerUser(name, city, mobile, bloodGroup, password);
-                }
+            if (isValid(name, city, mobile, bloodGroup, password)) {
+                registerUser(name, city, mobile, bloodGroup, password);
             }
         });
 
-        btnBack.setOnClickListener(new View.OnClickListener() {
+        btnBack.setOnClickListener(v -> {
+            finish();
+            overridePendingTransition(R.anim.slide_in_left, R.anim.slide_out_right);
+        });
+
+        getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
             @Override
-            public void onClick(View v) {
+            public void handleOnBackPressed() {
                 finish();
+                overridePendingTransition(R.anim.slide_in_left, R.anim.slide_out_right);
             }
         });
     }
@@ -74,9 +75,7 @@ public class RegisterActivity extends AppCompatActivity {
     }
 
     private void registerUser(String name, String city, String mobile, String bloodGroup, String password) {
-
         String userId = String.valueOf(100000 + new Random().nextInt(900000));
-
         User user = new User(name, city, mobile, bloodGroup, password, userId);
 
         databaseReference.child(mobile).setValue(user)
@@ -92,6 +91,7 @@ public class RegisterActivity extends AppCompatActivity {
                     Intent intent = new Intent(RegisterActivity.this, MainActivity.class);
                     intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
                     startActivity(intent);
+                    overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_left);
                     finish();
                 })
                 .addOnFailureListener(e -> {
